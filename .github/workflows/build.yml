@@ -114,49 +114,46 @@ jobs:
         with:
             swap-size-gb: 20
 
-      - name: "😎 Set args"
+      - name: "😎 Set args for GKI"
         id: generate-args
         working-directory: ./${{ env.kernelDir }}
         env:
-          params: "${{ toJSON(matrix.repos.params) }}"
-          THREAD: $(nproc --all)
+            params: "${{ toJSON(matrix.repos.params) }}"
         run: |
-          echo "PATH Variable: $PATH"
-          ARCH=$(echo $params | jq -r ".ARCH")
-          CROSS_COMPILE=$(echo $params | jq -r ".CROSS_COMPILE")
-          CROSS_COMPILE_COMPAT=$(echo $params | jq -r ".CROSS_COMPILE_COMPAT")
-          CROSS_COMPILE_ARM32=$(echo $params | jq -r ".CROSS_COMPILE_ARM32")
-          CLANG_TRIPLE=$(echo $params | jq -r ".CLANG_TRIPLE")
-          AR=$(echo $params | jq -r ".AR")
-          CC=$(echo $params | jq -r ".CC")
+            ARCH=$(echo $params | jq -r ".ARCH")
+            CROSS_COMPILE=$(echo $params | jq -r ".CROSS_COMPILE")
+            CROSS_COMPILE_ARM32=$(echo $params | jq -r ".CROSS_COMPILE_ARM32")
+            CLANG_TRIPLE=$(echo $params | jq -r ".CLANG_TRIPLE")
+            AR=$(echo $params | jq -r ".AR")
+            CC=$(echo $params | jq -r ".CC")
+          
+            echo "ARCH=arm64" >> $GITHUB_ENV
+            echo "LLVM=1" >> $GITHUB_ENV
+            echo "LTO=thin" >> $GITHUB_ENV  # ✅ Enable ThinLTO
 
-          echo "ARCH=$ARCH" >> $GITHUB_ENV
-
-          args="-j$(nproc --all)"
-          if [ -n "${{ env.OUT_DIR }}" ]; then
-            mkdir -p $(pwd)/${{ env.OUT_DIR }}
-            args="$args O=$(pwd)/${{ env.OUT_DIR }}"
-          fi
-          if [ -n "$ARCH" ]; then
-            args="$args ARCH=$ARCH"
-          fi
-          if [ -n "$CROSS_COMPILE" ]; then
-            args="$args CROSS_COMPILE=$CROSS_COMPILE"
-          fi
-          if [ -n "$CLANG_TRIPLE" ]; then
-            args="$args CLANG_TRIPLE=$CLANG_TRIPLE"
-          fi
-          if [ -n "$CROSS_COMPILE_COMPAT" ]; then
-            args="$args CROSS_COMPILE_ARM32=$CROSS_COMPILE_COMPAT"
-          fi
-          if [ -n "$AR" ]; then
-            args="$args AR=$AR"
-          fi
-          if [ -n "$CC" ]; then
-            args="$args CC=$CC"
-          fi
-          echo "args=$args" >> $GITHUB_OUTPUT
-
+            args="-j$(nproc --all)"
+            if [ -n "${{ env.OUT_DIR }}" ]; then
+              mkdir -p $(pwd)/${{ env.OUT_DIR }}
+              args="$args O=$(pwd)/${{ env.OUT_DIR }}"
+            fi
+            args="$args ARCH=arm64 LLVM=1 LTO=thin"  # ✅ Updated for GKI
+            if [ -n "$CROSS_COMPILE" ]; then
+              args="$args CROSS_COMPILE=$CROSS_COMPILE"
+            fi
+            if [ -n "$CLANG_TRIPLE" ]; then
+              args="$args CLANG_TRIPLE=$CLANG_TRIPLE"
+            fi
+            if [ -n "$CROSS_COMPILE_ARM32" ]; then
+              args="$args CROSS_COMPILE_ARM32=$CROSS_COMPILE_ARM32"
+            fi
+            if [ -n "$AR" ]; then
+              args="$args AR=$AR"
+            fi
+            if [ -n "$CC" ]; then
+              args="$args CC=$CC"
+            fi
+            echo "args=$args" >> $GITHUB_OUTPUT
+          
       - name: "😋 Update KernelSU-Next"
         working-directory: ./${{ env.kernelDir }}/${{ env.kernelName }}
         if: ${{ env.withKernelSU == 'true' }}
@@ -185,8 +182,10 @@ jobs:
         env:
           args: ${{ steps.generate-args.outputs.args }}
         run: |
+          export KBUILD_BUILD_USER="Action"
+          export KBUILD_BUILD_HOST="GitHub"
           echo "PATH Variable: $PATH"
-          make ${args}
+          make ${args} LLVM=1 LTO=thin KBUILD_BUILD_USER="$KBUILD_BUILD_USER" KBUILD_BUILD_HOST="$KBUILD_BUILD_HOST" -j$(nproc --all)
 
       - name: "💛 Upload Image"
         uses: actions/upload-artifact@v4
