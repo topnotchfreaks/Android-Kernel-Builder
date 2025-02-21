@@ -64,49 +64,50 @@ jobs:
           toolchains: "${{ toJSON(matrix.repos.toolchains) }}"
         run: |
           toolchains_num="$(echo $toolchains | jq 'length')"
-            echo "🤔 There are $toolchains_num defined toolchains."
-    
-            for ((i=0;i<toolchains_num;i++)); do
-              toolchain=$(echo $toolchains | jq -r ".[$i]")
-              toolchain_name=$(echo $toolchain | jq -r ".name")
-    
-              if echo $toolchain | jq -e 'has("url")' > /dev/null; then
-                toolchain_url=$(echo $toolchain | jq -r ".url")
-                mkdir -p "$toolchain_name"
-                filename="${toolchain_url##*/}"
-    
-                echo "🚀 Downloading $toolchain_name from $toolchain_url..."
-                if wget --progress=bar:force -O "$filename" "$toolchain_url"; then
+          echo "🤔 There are $toolchains_num defined toolchains."
+  
+          for ((i=0; i<toolchains_num; i++)); do
+            toolchain=$(echo "$toolchains" | jq -r ".[$i]")
+            toolchain_name=$(echo "$toolchain" | jq -r ".name")
+  
+            if echo "$toolchain" | jq -e 'has("url")' > /dev/null; then
+              toolchain_url=$(echo "$toolchain" | jq -r ".url")
+              mkdir -p "$toolchain_name"
+              filename="${toolchain_url##*/}"
+  
+              echo "🚀 Downloading $toolchain_name from $toolchain_url..."
+              if wget --progress=bar:force -O "$filename" "$toolchain_url"; then
                 case "$filename" in
                   *.zip) unzip -d "$toolchain_name" "$filename" ;;
-                  *.tar) tar xvf "$filename" -C "$toolchain_name" ;;
-                  *.tar.gz|*.tgz) tar zxvf "$filename" -C "$toolchain_name" ;;
-                  *.tar.xz) tar Jxvf "$filename" -C "$toolchain_name" ;;
+                  *.tar) tar -xvf "$filename" -C "$toolchain_name" ;;
+                  *.tar.gz|*.tgz) tar -zxvf "$filename" -C "$toolchain_name" ;;
+                  *.tar.xz) tar -xJf "$filename" -C "$toolchain_name" ;;
                   *.rar) unrar x "$filename" "$toolchain_name" ;;
                   *) echo "⚠️ Unknown file type: $filename, skipping extraction." ;;
                 esac
-                  rm -f "$filename"
-                  echo "✅ Downloaded and extracted $toolchain_name"
+                rm -f "$filename"
+                echo "✅ Downloaded and extracted $toolchain_name"
                 else
-                  echo "❌ Failed to download $toolchain_url"
-                  exit 1
+                echo "❌ Failed to download $toolchain_url"
+                exit 1
                 fi
+            else
+              toolchain_repo=$(echo "$toolchain" | jq -r ".repo")
+              toolchain_branch=$(echo "$toolchain" | jq -r ".branch")
+              echo "🚀 Cloning $toolchain_name from $toolchain_repo (branch: $toolchain_branch)..."
+              if git clone --recursive --depth=1 -j "$(nproc)" --branch "$toolchain_branch" "$toolchain_repo" "$toolchain_name"; then
+                echo "✅ Cloned $toolchain_name"
               else
-                toolchain_repo=$(echo $toolchain | jq -r ".repo")
-                toolchain_branch=$(echo $toolchain | jq -r ".branch")
-                echo "🚀 Cloning $toolchain_name from $toolchain_repo (branch: $toolchain_branch)..."
-                if git clone --recursive --depth=1 -j $(nproc) --branch "$toolchain_branch" "$toolchain_repo" "$toolchain_name"; then
-                  echo "✅ Cloned $toolchain_name"
-                else
-                  echo "❌ Failed to clone $toolchain_repo"
-                  exit 1
-                fi
+                echo "❌ Failed to clone $toolchain_repo"
+                exit 1
               fi
-    
-          jq -r ".binaryEnv[] | tostring" <<< "$toolchain" | while read -r subPath; do
-                echo "${{ env.WORKSPACE }}/$toolchain_name/$subPath" >> "$GITHUB_PATH"
-            done
-          done
+            fi
+  
+              # Properly iterate over binaryEnv and export paths
+              echo "$toolchain" | jq -r ".binaryEnv[] | tostring" | while read -r subPath; do
+                echo "${{ github.workspace }}/$toolchain_name/$subPath" >> "$GITHUB_PATH"
+              done
+            done  
 
       - name: 📐 Set swap to 20G
         uses: pierotofy/set-swap-space@master
