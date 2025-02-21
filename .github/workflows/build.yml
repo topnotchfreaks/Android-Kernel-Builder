@@ -13,6 +13,7 @@ on:
         default: "KernelSU"
         type: choice
         options:
+          - "None"
           - "KernelSU"
           - "KernelSU-Next"
           - "KernelSU-Next + Next-SuSFS"
@@ -268,6 +269,15 @@ jobs:
 
           cat ./arch/${{ env.ARCH }}/configs/${{ env.DEFCONFIG_NAME }}
 
+      - name: "🔍 KernelSU check"
+        working-directory: ./${{ env.kernelDir }}/${{ env.kernelName }}
+        run: |
+          if [ "${{ github.event.inputs.kernelSUChoice }}" == "None" ]; then
+            echo "Non-KSU Build"
+          else
+            echo "KSU Build"
+          fi
+  
       - name: "👍 Make defconfig"
         working-directory: ./${{ env.kernelDir }}/${{ env.kernelName }}
         env:
