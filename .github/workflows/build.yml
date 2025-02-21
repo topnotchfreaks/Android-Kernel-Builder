@@ -232,11 +232,13 @@ jobs:
 
       - name: "🛠 Set localversion name in defconfig"
         working-directory: ./${{ env.kernelDir }}/${{ env.kernelName }}
+        env:
+          LOCALVERSION: ${{ github.event.inputs.localVersion }}  # Set LOCALVERSION from input
         run: |
           # Set CONFIG_LOCALVERSION in the defconfig file
-          if [ -n "${{ env.LOCALVERSION }}" ]; then
-            echo "CONFIG_LOCALVERSION=\"${{ env.LOCALVERSION }}\"" >> arch/${{ env.ARCH }}/configs/${{ env.DEFCONFIG_NAME }}
-            echo "✅ Set CONFIG_LOCALVERSION to: ${{ env.LOCALVERSION }}" 
+          if [ -n "$LOCALVERSION" ]; then
+            echo "CONFIG_LOCALVERSION=\"$LOCALVERSION\"" >> arch/${{ env.ARCH }}/configs/${{ env.DEFCONFIG_NAME }}
+            echo "✅ Set CONFIG_LOCALVERSION to: $LOCALVERSION"
           else
             echo "ℹ️ No localversion specified. Using default."
           fi
