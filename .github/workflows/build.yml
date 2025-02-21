@@ -18,6 +18,16 @@ on:
           - "KernelSU-Next"
           - "KernelSU-Next + Next-SuSFS"
           - "KernelSU by @rsuntk"
+      kernelSourceURL:
+        description: "Custom kernel source URL"
+        required: true
+        type: string
+        default: "https://github.com/topnotchfreaks/kernel_msm-5.15" # Default kernel source URL
+      kernelBranch:
+        description: "kernel branch (default if empty)"
+        required: false
+        type: string
+        default: "android13-5.15"
 
 jobs:
   Set-repos:
@@ -32,9 +42,17 @@ jobs:
       - name: "😆 Generate Matrix"
         id: generate-matrix
         run: |
+          # Read the JSON configuration
+          repos=$(cat ${{ env.CONFIGURATION }})
+
+          # Override the kernel source URL and branch with the values provided by the user
+          repos=$(echo "$repos" | jq --arg url "${{ github.event.inputs.kernelSourceURL }}" --arg branch "${{ github.event.inputs.kernelBranch }}" '.[].kernelSource.repo = $url | .[].kernelSource.branch = $branch')
+
+          # Output the modified JSON
           echo "repos<<EOF" >> $GITHUB_OUTPUT
-          cat  ${{ env.CONFIGURATION }} >> $GITHUB_OUTPUT
+          echo "$repos" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+
 
   Build-Kernel:
     name: "🐎 Build kernel"
@@ -72,7 +90,7 @@ jobs:
       - name: "🌟 Clone kernel source => (${{ env.kernelRepo }})"
         working-directory: ./${{ env.kernelDir }}
         run: |
-          git clone --recursive --branch $kernelBranch $kernelRepo $kernelName --depth=1
+          git clone --recursive --branch ${{ matrix.repos.kernelSource.branch }} ${{ matrix.repos.kernelSource.repo }} ${{ env.kernelName }} --depth=1
 
       - name: "💫 Get toolchains"
         env:
