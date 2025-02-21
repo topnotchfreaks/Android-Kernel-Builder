@@ -28,6 +28,11 @@ on:
         required: false
         type: string
         default: "android13-5.15"
+      localVersion:
+        description: "Custom localversion name (e.g., -mybuild)"
+        required: false
+        type: string
+        default: ""  # Default is empty (no suffix)
 
 jobs:
   Set-repos:
@@ -224,6 +229,17 @@ jobs:
               args="$args CC=$CC"
             fi
             echo "args=$args" >> $GITHUB_OUTPUT
+
+      - name: "🛠 Set localversion name in defconfig"
+        working-directory: ./${{ env.kernelDir }}/${{ env.kernelName }}
+        run: |
+          # Set CONFIG_LOCALVERSION in the defconfig file
+          if [ -n "${{ env.LOCALVERSION }}" ]; then
+            echo "CONFIG_LOCALVERSION=\"${{ env.LOCALVERSION }}\"" >> arch/${{ env.ARCH }}/configs/${{ env.DEFCONFIG_NAME }}
+            echo "✅ Set CONFIG_LOCALVERSION to: ${{ env.LOCALVERSION }}" 
+          else
+            echo "ℹ️ No localversion specified. Using default."
+          fi
 
       - name: "😋 Update KernelSU"
         working-directory: ./${{ env.kernelDir }}/${{ env.kernelName }}
