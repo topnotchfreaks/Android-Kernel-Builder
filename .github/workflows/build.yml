@@ -143,15 +143,6 @@ jobs:
             echo "CXX='ccache clang++'" >> $GITHUB_ENV
             echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
           
-      - name: "📥 Restore ccache Cache"
-        uses: actions/cache@v4
-        with:
-          path: ${{ github.workspace }}/.ccache
-          key: ${{ runner.os }}-ccache-${{ github.sha }}
-          restore-keys: |
-              ${{ runner.os }}-ccache-
-          
-
       - name: "😎 Set args for GKI"
         id: generate-args
         working-directory: ./${{ env.kernelDir }}
