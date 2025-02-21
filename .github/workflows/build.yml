@@ -15,7 +15,7 @@ jobs:
       repos: ${{ steps.generate-matrix.outputs.repos }}
     steps:
       - name: "😄 Checkout"
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: "😆 Generate Matrix"
         id: generate-matrix
@@ -52,30 +52,71 @@ jobs:
       - name: "⭐ Install prerequisites"
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential bc curl git zip ftp gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi libssl-dev lftp zstd wget libfl-dev python2 python3 libarchive-tools
+          sudo apt-get install -y build-essential bc curl flex cpio ccache rsync git zip dwarves libelf-dev ftp gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi libssl-dev lftp zstd wget libfl-dev python3 libarchive-tools
 
       - name: "🌟 Clone kernel source => (${{ env.kernelRepo }})"
         working-directory: ./${{ env.kernelDir }}
         run: |
           git clone --recursive --branch $kernelBranch $kernelRepo $kernelName --depth=1
 
+          - name: "🌟 Clone kernel source => (${{ env.kernelRepo }})"
+          working-directory: ./${{ env.kernelDir }}
+          run: |
+            git clone --recursive --branch $kernelBranch $kernelRepo $kernelName --depth=1
+
       - name: "💫 Get toolchains"
-        working-directory: ./${{ env.kernelDir }}
         env:
-          toolchains: "${{ toJSON(matrix.repos.toolchains) }}"
+            toolchains: "${{ toJSON(matrix.repos.toolchains) }}"
         run: |
           toolchains_num="$(echo $toolchains | jq 'length')"
-          echo $toolchains_num
-          for ((i=0;i<toolchains_num;i++)); do
-            name=$(echo $toolchains | jq -r ".[$i].name")
-            repo=$(echo $toolchains | jq -r ".[$i].repo")
-            branch=$(echo $toolchains | jq -r ".[$i].branch")
-            git clone --recursive --branch $branch $repo $name --depth=1
-            echo "$(pwd)/$name/" >> $GITHUB_PATH
-            echo "$(pwd)/$name/bin" >> $GITHUB_PATH
+            echo "🤔 There are $toolchains_num defined toolchains."
+    
+            for ((i=0;i<toolchains_num;i++)); do
+              toolchain=$(echo $toolchains | jq -r ".[$i]")
+              toolchain_name=$(echo $toolchain | jq -r ".name")
+    
+              if echo $toolchain | jq -e 'has("url")' > /dev/null; then
+                toolchain_url=$(echo $toolchain | jq -r ".url")
+                mkdir -p "$toolchain_name"
+                filename="${toolchain_url##*/}"
+    
+                echo "🚀 Downloading $toolchain_name from $toolchain_url..."
+                if wget --progress=bar:force -O "$filename" "$toolchain_url"; then
+                case "$filename" in
+                  *.zip) unzip -d "$toolchain_name" "$filename" ;;
+                  *.tar) tar xvf "$filename" -C "$toolchain_name" ;;
+                  *.tar.gz|*.tgz) tar zxvf "$filename" -C "$toolchain_name" ;;
+                  *.tar.xz) tar Jxvf "$filename" -C "$toolchain_name" ;;
+                  *.rar) unrar x "$filename" "$toolchain_name" ;;
+                  *) echo "⚠️ Unknown file type: $filename, skipping extraction." ;;
+                esac
+                  rm -f "$filename"
+                  echo "✅ Downloaded and extracted $toolchain_name"
+                else
+                  echo "❌ Failed to download $toolchain_url"
+                  exit 1
+                fi
+              else
+                toolchain_repo=$(echo $toolchain | jq -r ".repo")
+                toolchain_branch=$(echo $toolchain | jq -r ".branch")
+                echo "🚀 Cloning $toolchain_name from $toolchain_repo (branch: $toolchain_branch)..."
+                if git clone --recursive --depth=1 -j $(nproc) --branch "$toolchain_branch" "$toolchain_repo" "$toolchain_name"; then
+                  echo "✅ Cloned $toolchain_name"
+                else
+                  echo "❌ Failed to clone $toolchain_repo"
+                  exit 1
+                fi
+              fi
+    
+          jq -r ".binaryEnv[] | tostring" <<< "$toolchain" | while read -r subPath; do
+                echo "${{ env.WORKSPACE }}/$toolchain_name/$subPath" >> "$GITHUB_PATH"
+            done
           done
 
-          echo "PATH Variable: $PATH"
+      - name: 📐 Set swap to 20G
+        uses: pierotofy/set-swap-space@master
+        with:
+            swap-size-gb: 20
 
       - name: "😎 Set args"
         id: generate-args
@@ -156,33 +197,9 @@ jobs:
           make ${args}
 
       - name: "💛 Upload Image"
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Image(${{ env.kernelDevice }}-${{ env.kernelName }}-${{ env.kernelBranch }})
           path: ./${{ env.kernelDir }}/${{ env.OUT_DIR }}/arch/${{ env.ARCH }}/boot/Image
-          if-no-files-found: ignore
-          retention-days: 7
-
-      - name: "💙 Upload Image.gz"
-        uses: actions/upload-artifact@v3
-        with:
-          name: Image.gz(${{ env.kernelDevice }}-${{ env.kernelName }}-${{ env.kernelBranch }})
-          path: ./${{ env.kernelDir }}/${{ env.OUT_DIR }}/arch/${{ env.ARCH }}/boot/Image.gz
-          if-no-files-found: ignore
-          retention-days: 7
-
-      - name: "💜 Upload dtb"
-        uses: actions/upload-artifact@v3
-        with:
-          name: dtb(${{ env.kernelDevice }}-${{ env.kernelName }}-${{ env.kernelBranch }})
-          path: ./${{ env.kernelDir }}/${{ env.OUT_DIR }}/arch/${{ env.ARCH }}/boot/dtb
-          if-no-files-found: ignore
-          retention-days: 7
-
-      - name: "❤️ Upload dtbo.img"
-        uses: actions/upload-artifact@v3
-        with:
-          name: dtbo.img(${{ env.kernelDevice }}-${{ env.kernelName }}-${{ env.kernelBranch }})
-          path: ./${{ env.kernelDir }}/${{ env.OUT_DIR }}/arch/${{ env.ARCH }}/boot/dtbo.img
           if-no-files-found: ignore
           retention-days: 7
