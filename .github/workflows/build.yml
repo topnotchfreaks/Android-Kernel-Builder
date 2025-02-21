@@ -111,9 +111,6 @@ jobs:
                 echo "${{ github.workspace }}/$toolchain_name/$subPath" >> "$GITHUB_PATH"
               done
             done  
-
-      - name: "🔍 Verify Clang Installation"
-        run: ls -la ${{ env.WORKSPACE }}/clang/bin
         
       - name: "🛠 Set ZyC Clang as Default"
         run: |
@@ -129,6 +126,8 @@ jobs:
           export STRIP="llvm-strip"
           clang --version
       
+      - name: "🔍 Verify Clang Installation"
+        run: ls -la ${{ env.WORKSPACE }}/clang/bin
 
       - name: 📐 Set swap to 20G
         uses: pierotofy/set-swap-space@master
