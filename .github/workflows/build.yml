@@ -230,7 +230,7 @@ jobs:
           cp out/*.log logs/ || true  # Copy build logs (adjust path if needed)
         
       - name: "📤 Upload Logs"
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build-logs
           path: logs/
