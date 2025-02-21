@@ -6,6 +6,15 @@ env:
 
 on:
   workflow_dispatch:
+    inputs:
+      kernelSUChoice:
+        description: "Choose KernelSU version"
+        required: true
+        default: "KernelSU"
+        type: choice
+        options:
+          - "KernelSU"
+          - "KernelSU-Next"
 
 jobs:
   Set-repos:
@@ -194,10 +203,25 @@ jobs:
               args="$args CC=$CC"
             fi
             echo "args=$args" >> $GITHUB_OUTPUT
-          
+
+      - name: "😋 Update KernelSU"
+        working-directory: ./${{ env.kernelDir }}/${{ env.kernelName }}
+        if: ${{ github.event.inputs.kernelSUChoice == 'KernelSU' }}
+        run: |
+          if [ -d "./KernelSU" ]; then
+            rm -rf "./KernelSU"
+          fi
+          if [ -d "./drivers/kernelsu" ]; then
+            rm -rf "./drivers/kernelsu"
+          fi
+              
+          curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -
+              
+          cat ./arch/${{ env.ARCH }}/configs/${{ env.DEFCONFIG_NAME }}            
+
       - name: "😋 Update KernelSU-Next"
         working-directory: ./${{ env.kernelDir }}/${{ env.kernelName }}
-        if: ${{ env.withKernelSU == 'true' }}
+        if: ${{ github.event.inputs.kernelSUChoice == 'KernelSU-Next' }}
         run: |
           if [ -d "./KernelSU-Next" ]; then
             rm -rf "./KernelSU-Next"
