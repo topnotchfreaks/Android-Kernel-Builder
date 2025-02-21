@@ -15,6 +15,7 @@ on:
         options:
           - "KernelSU"
           - "KernelSU-Next"
+          - "KernelSU-Next + Next-SuSFS"
 
 jobs:
   Set-repos:
@@ -231,6 +232,23 @@ jobs:
           fi
 
           curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -
+
+          cat ./arch/${{ env.ARCH }}/configs/${{ env.DEFCONFIG_NAME }}
+
+      - name: "😋 Update KernelSU-Next + Next-SuSFS"
+        working-directory: ./${{ env.kernelDir }}/${{ env.kernelName }}
+        if: ${{ github.event.inputs.kernelSUChoice == 'KernelSU-Next + Next-SuSFS' }}
+        run: |
+          if [ -d "./KernelSU-Next" ]; then
+            rm -rf "./KernelSU-Next"
+          fi
+          if [ -d "./drivers/kernelsu" ]; then
+            rm -rf "./drivers/kernelsu"
+          fi
+
+          curl -LSs "https://raw.githubusercontent.com/rifsxd/susfs-next/main/setup.sh" | bash -
+
+          curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next-susfs/kernel/setup.sh" | bash -s next-susfs
 
           cat ./arch/${{ env.ARCH }}/configs/${{ env.DEFCONFIG_NAME }}
 
