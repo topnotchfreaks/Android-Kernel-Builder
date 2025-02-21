@@ -215,7 +215,7 @@ jobs:
           export CCACHE_CPP2=yes
           ccache -z  # Reset stats
           echo "PATH Variable: $PATH"
-          make ${args} LLVM=1 LTO=thin CC="ccache clang" ccache -s KBUILD_BUILD_USER="$KBUILD_BUILD_USER" KBUILD_BUILD_HOST="$KBUILD_BUILD_HOST" -j$(nproc --all)
+          make ${args} LLVM=1 LTO=thin KBUILD_BUILD_USER="$KBUILD_BUILD_USER" KBUILD_BUILD_HOST="$KBUILD_BUILD_HOST" -j$(nproc --all)
 
       - name: "📤 Save ccache Cache"
         uses: actions/cache@v4
