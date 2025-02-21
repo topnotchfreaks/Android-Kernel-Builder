@@ -112,6 +112,24 @@ jobs:
               done
             done  
 
+      - name: "🔍 Verify Clang Installation"
+        run: ls -la ${{ env.WORKSPACE }}/clang/bin
+        
+      - name: "🛠 Set ZyC Clang as Default"
+        run: |
+          export CLANG_PATH="${{ github.workspace }}/clang/bin"
+          export PATH="$CLANG_PATH:$PATH"
+          export CLANG_TRIPLE="aarch64-linux-gnu-"
+          export CC="clang"
+          export AR="llvm-ar"
+          export AS="llvm-as"
+          export NM="llvm-nm"
+          export OBJCOPY="llvm-objcopy"
+          export OBJDUMP="llvm-objdump"
+          export STRIP="llvm-strip"
+          clang --version
+      
+
       - name: 📐 Set swap to 20G
         uses: pierotofy/set-swap-space@master
         with:
@@ -208,15 +226,30 @@ jobs:
         run: |
           export KBUILD_BUILD_USER="Action"
           export KBUILD_BUILD_HOST="GitHub"
+        
+          # Enable CCache
           export CCACHE_DIR="${{ github.workspace }}/.ccache"
           export CCACHE_COMPRESS=1
           export CCACHE_COMPRESSLEVEL=6
           export CCACHE_MAXSIZE=10G
           export CCACHE_CPP2=yes
           ccache -z  # Reset stats
-          echo "PATH Variable: $PATH"
-          make ${args} LLVM=1 LTO=thin KBUILD_BUILD_USER="$KBUILD_BUILD_USER" KBUILD_BUILD_HOST="$KBUILD_BUILD_HOST" -j$(nproc --all)
-
+        
+          # Build Kernel
+          make ${args} \
+            LLVM=1 \
+            LTO=thin \
+            CC=clang \
+            AR=llvm-ar \
+            AS=llvm-as \
+            NM=llvm-nm \
+            OBJCOPY=llvm-objcopy \
+            OBJDUMP=llvm-objdump \
+            STRIP=llvm-strip \
+            KBUILD_BUILD_USER="$KBUILD_BUILD_USER" \
+            KBUILD_BUILD_HOST="$KBUILD_BUILD_HOST" \
+            -j$(nproc --all)
+        
       - name: "📤 Save ccache Cache"
         uses: actions/cache@v4
         with:
