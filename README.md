@@ -199,6 +199,7 @@ This is just a suggestion, and we do not provide a specific guide.
 
 - [weishu](https://github.com/tiann) : Developer of KernelSU
 - [rifsxd](https://github.com/rifsxd) : Developer of KernelSU-Next
+- [rsuntk](https://github.com/rsuntk) : Developer of RKSU
 - [AKR Android Developer Community](https://www.akr-developers.com/) ： Provides build tutorials
 - [DogDayAndroid/KSU_Thyme_BuildBot](https://github.com/DogDayAndroid/KSU_Thyme_BuildBot) : Predecessor of this project
 - [xiaoleGun/KernelSU_Action](https://github.com/xiaoleGun/KernelSU_Action) ： Drawing on some Github Actions
