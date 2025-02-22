@@ -173,14 +173,14 @@ jobs:
             echo "⚙️ Using Clang version:"
             clang --version
     
-      - name: 📐 Set swap to 20G
+      - name: 📐 Set swap to 50G
         uses: pierotofy/set-swap-space@master
         with:
-            swap-size-gb: 20
+            swap-size-gb: 50
 
       - name: "⚡ Tune Swap Settings"
         run: |
-            echo "vm.swappiness=80" | sudo tee -a /etc/sysctl.conf
+            echo "vm.swappiness=100" | sudo tee -a /etc/sysctl.conf
             sudo sysctl -p
 
       - name: "⚡ Configure ccache"
