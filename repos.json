@@ -1,11 +1,5 @@
 [
   {
-    "kernelSource": {
-      "name": "msm-5.15",
-      "repo": "https://github.com/topnotchfreaks/kernel_msm-5.15",
-      "branch": "main",
-      "device": "gki"
-    },
     "toolchains": [
       {
         "name": "gas",
