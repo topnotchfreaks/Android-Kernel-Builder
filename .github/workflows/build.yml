@@ -33,6 +33,11 @@ on:
         required: false
         type: string
         default: ""  # Default is empty (no suffix)
+      withKernelSUSFS:
+        description: "Enable SUSFS"
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   Set-repos:
