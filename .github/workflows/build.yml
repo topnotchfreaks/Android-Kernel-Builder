@@ -33,6 +33,11 @@ on:
         required: true
         type: string
         default: "https://github.com/topnotchfreaks/kernel_msm-5.15" # Default kernel source URL
+      kernelPrivateSource:
+        description: "is private source?"
+        required: false
+        type: boolean
+        default: false
       kernelBranch:
         description: "kernel branch (default if empty)"
         required: false
@@ -111,8 +116,36 @@ jobs:
 
       - name: "🌟 Clone kernel source => (${{ env.kernelRepo }})"
         working-directory: ./${{ env.kernelDir }}
+        env:
+          PRIVATE_SOURCE: ${{ github.event.inputs.kernelSourceURL }}
         run: |
-          git clone --recursive --branch ${{ github.event.inputs.kernelBranch }} ${{ github.event.inputs.kernelSourceURL }} ${{ env.kernelName }} --depth=1
+          set -x  # Enable debugging
+          if [ "${{ github.event.inputs.kernelPrivateSource }}" == "true" ]; then
+            # Detect if the URL is from GitHub or GitLab and extract the username
+            if [[ "$PRIVATE_SOURCE" == *"github.com"* ]]; then
+              PRIVATE_SOURCE="${PRIVATE_SOURCE#https://github.com/}"
+              OWNER=$(echo "$PRIVATE_SOURCE" | cut -d'/' -f1)  # Extract the owner/username
+              REPO_PREFIX="https://$OWNER:${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/"
+            elif [[ "$PRIVATE_SOURCE" == *"gitlab.com"* ]]; then
+              PRIVATE_SOURCE="${PRIVATE_SOURCE#https://gitlab.com/}"
+              OWNER=$(echo "$PRIVATE_SOURCE" | cut -d'/' -f1)  # Extract the owner/username
+              REPO_PREFIX="https://$OWNER:${{ secrets.PRIVATE_REPO_TOKEN }}@gitlab.com/"
+            else
+              echo "Unsupported repository source: $PRIVATE_SOURCE"
+              exit 1
+            fi
+      
+            # Debugging: Print the final URL (mask the token for security)
+            echo "Final URL: ${REPO_PREFIX}${PRIVATE_SOURCE}"
+      
+            # Clone the private repository using the dynamic prefix
+            git clone --recursive --branch ${{ github.event.inputs.kernelBranch }} \
+              "$REPO_PREFIX$PRIVATE_SOURCE" ${{ env.kernelName }} --depth=1
+          else
+            # Clone the public repository directly
+            git clone --recursive --branch ${{ github.event.inputs.kernelBranch }} \
+              ${{ github.event.inputs.kernelSourceURL }} ${{ env.kernelName }} --depth=1
+          fi
 
       - name: "💫 Get toolchains"
         env:
