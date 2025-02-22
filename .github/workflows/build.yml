@@ -18,6 +18,11 @@ on:
           - "KernelSU-Next"
           - "KernelSU-Next + Next-SuSFS"
           - "KernelSU by @rsuntk"
+      withKernelSUSFS:
+        description: "Enable SUSFS"
+        required: false
+        type: boolean
+        default: false
       kernelSourceURL:
         description: "Custom kernel source URL"
         required: true
@@ -33,11 +38,6 @@ on:
         required: false
         type: string
         default: ""  # Default is empty (no suffix)
-      withKernelSUSFS:
-        description: "Enable SUSFS"
-        required: false
-        type: boolean
-        default: false
 
 jobs:
   Set-repos:
