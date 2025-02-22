@@ -425,6 +425,9 @@ jobs:
           check_status "Failed to create directories"
 
           # Clone SUSFS repository
+          if [ -d "./susfs4ksu" ]; then
+            rm -rf "./susfs4ksu"
+          fi
           log "Cloning SUSFS repository (branch: ${{env.SFS_BRANCH}})..."
           git clone -v https://gitlab.com/simonpunk/susfs4ksu.git -b "${{env.SFS_BRANCH}}" || {
             log "Failed to clone SUSFS repository"
