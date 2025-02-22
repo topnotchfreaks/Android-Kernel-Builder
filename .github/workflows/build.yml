@@ -536,18 +536,6 @@ jobs:
           path: ${{ github.workspace }}/.ccache
           key: ${{ runner.os }}-ccache-${{ github.sha }}
         
-      - name: "📜 Save Build Logs"
-        if: failure()  # Only upload logs if the build fails
-        run: |
-          mkdir -p logs
-          cp out/*.log logs/ || true  # Copy build logs (adjust path if needed)
-        
-      - name: "📤 Upload Logs"
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-logs
-          path: logs/
-        
       - name: "💛 Upload Image"
         uses: actions/upload-artifact@v4
         with:
