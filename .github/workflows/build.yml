@@ -6,27 +6,6 @@ env:
 on:
   workflow_dispatch:
     inputs:
-      kernelSUChoice:
-        description: "Choose KernelSU version"
-        required: true
-        default: "KernelSU"
-        type: choice
-        options:
-          - "None"
-          - "KernelSU"
-          - "KernelSU-Next"
-          - "KernelSU-Next + Next-SuSFS"
-          - "KernelSU by @rsuntk"
-      withKernelSUSFS:
-        description: "Enable SUSFS"
-        required: false
-        type: boolean
-        default: false
-      susfsBranch:
-        description: "SUSFS branch to use"
-        required: false
-        type: string
-        default: "gki-android13-5.15"  # Default SUSFS branch
       kernelSourceURL:
         description: "Custom kernel source URL"
         required: true
@@ -57,6 +36,27 @@ on:
         required: false
         type: string
         default: ""  # Default is empty (no suffix)
+      kernelSUChoice:
+        description: "Choose KernelSU version"
+        required: true
+        default: "KernelSU"
+        type: choice
+        options:
+          - "None"
+          - "KernelSU"
+          - "KernelSU-Next"
+          - "KernelSU-Next + Next-SuSFS"
+          - "KernelSU by @rsuntk"
+      withKernelSUSFS:
+        description: "Enable SUSFS"
+        required: false
+        type: boolean
+        default: false
+      susfsBranch:
+        description: "SUSFS branch to use"
+        required: false
+        type: string
+        default: "gki-android13-5.15"  # Default SUSFS branch
       clangCompiler:
         description: "Clang compiler to use"
         required: false
