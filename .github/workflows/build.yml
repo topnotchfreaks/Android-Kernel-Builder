@@ -65,7 +65,6 @@ on:
         options:
           - "ZyC Clang"
           - "Greenforce Clang"
-          - "Proton Clang"
           - "SuperRyzen Clang"
           - "WeebX Clang"
 
@@ -205,9 +204,6 @@ jobs:
               ;;
             "Greenforce Clang")
               clang_url="https://github.com/greenforce-project/greenforce_clang/releases/download/23022025/greenforce-clang-21.0.0git-23022025.tar.gz"
-              ;;
-            "Proton Clang")
-              clang_url="https://github.com/kdrag0n/proton-clang"
               ;;
             "SuperRyzen Clang")
               clang_url="https://gitlab.com/TianWalkzzMiku/SuperRyzen-Clang/"
