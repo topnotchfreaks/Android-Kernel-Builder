@@ -31,7 +31,7 @@ on:
         description: "Custom kernel source URL"
         required: true
         type: string
-        default: "https://github.com/topnotchfreaks/kernel_msm-5.15" # Default kernel source URL
+        default: "https://github.com/KDEFFALT/kernel_msm-5.15" # Default kernel source URL
       kernelPrivateSource:
         description: "is private source?"
         required: false
@@ -41,7 +41,7 @@ on:
         description: "kernel branch (default if empty)"
         required: false
         type: string
-        default: "android13-5.15"
+        default: "main"
       kernelDevice:
         description: "Device (used for defconfig)"
         required: true
