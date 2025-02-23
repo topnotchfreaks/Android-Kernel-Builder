@@ -58,6 +58,16 @@ on:
         required: false
         type: string
         default: ""  # Default is empty (no suffix)
+      anyKernelRepo:
+        description: "AnyKernel3 repository URL"
+        required: false
+        type: string
+        default: "https://github.com/ssocozy/Anykernel3"  # Default AnyKernel3 repo
+      anyKernelBranch:
+        description: "AnyKernel3 branch name"
+        required: false
+        type: string
+        default: "main"  # Default branch
 
 jobs:
   Set-repos:
@@ -592,48 +602,45 @@ jobs:
           path: ${{ github.workspace }}/.ccache
           key: ${{ runner.os }}-ccache-${{ github.sha }}
         
-      - name: "💛 Upload Image"
+      - name: "💛 Upload Raw Image"
         uses: actions/upload-artifact@v4
         with:
-          name: "${{ env.kernelDevice }}_${{ env.kernelName }}_${{ env.kernelBranch }}_${{ env.BUILD_TIME }}"
+          name: "${{ env.kernelDevice }}_${{ env.kernelName }}_${{ env.kernelBranch }}_${{ env.BUILD_TIME }}_raw"
           path: ./${{ env.kernelDir }}/${{ env.OUT_DIR }}/arch/${{ env.ARCH }}/boot/Image
           if-no-files-found: ignore
           retention-days: 7
 
-      - name: "📦 Pack Anykernel3"
+      - name: "📲 Pack Kernel with AnyKernel3"
         working-directory: ./${{ env.kernelDir }}/${{ env.kernelName }}
         run: |
-          # Clone AnyKernel3
-          git clone https://github.com/topnotchfreaks/AnyKernel3.git --depth=1
-          
-          # Verify the kernel image path
-          KERNEL_IMAGE_PATH="../${{ env.OUT_DIR }}/arch/${{ env.ARCH }}/boot/Image"
-          if [ ! -f "$KERNEL_IMAGE_PATH" ]; then
-            echo "Error: Kernel image not found at $KERNEL_IMAGE_PATH"
-            echo "Checking for alternative image names..."
-            KERNEL_IMAGE_PATH=$(find ../${{ env.OUT_DIR }}/arch/${{ env.ARCH }}/boot -name "Image*" | head -n 1)
-            if [ -z "$KERNEL_IMAGE_PATH" ]; then
-              echo "Error: No kernel image found. Check the build logs."
-              exit 1
-            else
-              echo "Found kernel image at: $KERNEL_IMAGE_PATH"
-            fi
+          # Set variables
+          ANYKERNEL_DIR="anykernel3"
+          KERNEL_IMAGE="../${{ env.OUT_DIR }}/arch/${{ env.ARCH }}/boot/Image"
+          ZIPNAME="${{ env.kernelDevice }}_${{ env.kernelName }}_${{ env.kernelBranch }}_${{ env.BUILD_TIME }}.zip"
+
+          # Check if kernel image exists
+          if [ ! -f "$KERNEL_IMAGE" ]; then
+            echo "❌ Kernel image not found at: $KERNEL_IMAGE"
+            exit 1
           fi
-          
-          # Copy the kernel image to AnyKernel3
-          cp "$KERNEL_IMAGE_PATH" AnyKernel3/Image
-          
-          # Pack the kernel
-          ZIP_NAME="${{ env.kernelBranch }}_${{ env.BUILD_TIME }}.zip"
-          zip -r5 "$ZIP_NAME" AnyKernel3 -x .git/*
-  
-          # Set the ZIP file path as an environment variable for the next step
-          echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
-        
-      - name: "⬆️ Upload Kernel Artifact"
+
+          echo "📦 Cloning AnyKernel3 repository..."
+          git clone --depth 1 "${{ github.event.inputs.anyKernelRepo }}" -b "${{ github.event.inputs.anyKernelBranch }}" "$ANYKERNEL_DIR"
+   
+          echo "📦 Copying kernel image..."
+          cp "$KERNEL_IMAGE" "$ANYKERNEL_DIR/"
+
+          echo "📦 Creating ZIP package..."
+          cd "$ANYKERNEL_DIR"
+          zip -r9 "../$ZIPNAME" * -x .git README.md *placeholder "../$ZIPNAME"
+
+          echo "✅ Kernel package created: $ZIPNAME"
+
+      - name: "💛 Upload AnyKernel3 Package"
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.kernelBranch }}_${{ env.BUILD_TIME }}_Anykernel3.zip
-          path: ./${{ env.kernelDir }}/${{ env.kernelName }}/${{ env.ZIP_NAME }}
+          name: "${{ env.kernelDevice }}_${{ env.kernelName }}_${{ env.kernelBranch }}_${{ env.BUILD_TIME }}"
+          path: ./${{ env.kernelDir }}/${{ env.kernelName }}/${{ env.kernelDevice }}_${{ env.kernelName }}_${{ env.kernelBranch }}_${{ env.BUILD_TIME }}.zip
           if-no-files-found: ignore
           retention-days: 7
+
