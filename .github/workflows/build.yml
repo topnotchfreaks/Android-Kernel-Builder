@@ -43,11 +43,7 @@ on:
         required: false
         type: string
         default: "android13-5.15"
-      kernelDevice:
-        description: "Device (used for defconfig)"
-        required: true
-        type: string
-        default: "gki"  # Default device codename
+
       kernelSourceName:
         description: "Kernel source name"
         required: true
@@ -105,12 +101,12 @@ jobs:
       matrix:
         repos: ${{ fromJSON(needs.Set-repos.outputs.repos) }}
     env:
-      kernelDir: ${{ github.event.inputs.kernelSourceName }}_${{ github.event.inputs.kernelDevice }}
+      kernelDir: ${{ github.event.inputs.kernelSourceName }}_gki
       kernelName: ${{ github.event.inputs.kernelSourceName }}
       kernelRepo: ${{ github.event.inputs.kernelSourceURL }}
       kernelBranch: ${{ github.event.inputs.kernelBranch }}
-      kernelDevice: ${{ github.event.inputs.kernelDevice }}
-      DEFCONFIG_NAME: ${{ github.event.inputs.kernelDevice }}_defconfig
+      kernelDevice: "gki"
+      DEFCONFIG_NAME: gki_defconfig
 
     steps:
       - name: "✨ Create working dir"
