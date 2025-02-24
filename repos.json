@@ -1,5 +1,8 @@
 [
   {
+    "device": "deviceConfig",
+    "defconfig": "gki_defconfig",
+
     "toolchains": [
       {
         "name": "gas",
