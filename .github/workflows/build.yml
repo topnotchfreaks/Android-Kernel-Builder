@@ -681,26 +681,12 @@ jobs:
       
           echo "Found kernel image at: $KERNEL_IMAGE_PATH"
           cp "$KERNEL_IMAGE_PATH" AnyKernel3/Image
-
-          # Check if boot.img exists
-          BOOT_IMAGE_PATH="../${{ env.OUT_DIR }}/arch/${{ env.ARCH }}/boot/boot.img"
-          if [ ! -f "$BOOT_IMAGE_PATH" ]; then
-            echo "Error: No boot.img found."
-            exit 1
-          fi
-          echo "Found boot image at: $BOOT_IMAGE_PATH"
       
           # Pack the kernel
           ZIP_NAME="${{ env.kernelBranch }}_${{ env.BUILD_TIME }}.zip"
           cd AnyKernel3
           zip -r9 "../$ZIP_NAME" * -x .git/*
           cd ..
-      
-          # Move necessary files for upload
-          mkdir -p release_files
-          cp "$KERNEL_IMAGE_PATH" release_files/Image
-          cp "$BOOT_IMAGE_PATH" release_files/boot.img
-          mv "$ZIP_NAME" release_files/
 
           echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
       
@@ -721,14 +707,14 @@ jobs:
           tag_name: ${{ env.kernelBranch }}_${{ env.BUILD_TIME }}
           release_name: Release ${{ env.kernelBranch }} - ${{ env.BUILD_TIME }}
           body: |
-            - **Build Notes**
+            **Build Notes**
             - Repository Branch: `${{ github.ref_name }}`
             - Compiled with ${{ github.event.inputs.clangCompiler }}
             - KernelSU: ${{ github.event.inputs.kernelSUChoice }}
             - SUSFS: ${{ github.event.inputs.withKernelSUSFS }}
             - Branch: ${{ github.event.inputs.susfsBranch }}
         
-            - **Flash Instructions**
+            **Flash Instructions**
             - Use latest recovery
             - Flash via Orangefox or TWRP
           draft: false
@@ -743,24 +729,4 @@ jobs:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
           asset_path: ./${{ env.kernelDir }}/${{ env.kernelName }}/${{ env.kernelBranch }}_${{ env.BUILD_TIME }}.zip
           asset_name: Anykernel3_${{ env.kernelBranch }}_${{ env.BUILD_TIME }}.zip
-          asset_content_type: application/zip 
-
-      - name: "⬆ Upload boot.img to GitHub Release"
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-        with:
-          upload_url: ${{ steps.create-release.outputs.upload_url }}
-          asset_path: release_files/boot.img
-          asset_name: boot.img
-          asset_content_type: application/octet-stream
-
-      - name: "⬆ Upload Image to GitHub Release"
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-        with:
-          upload_url: ${{ steps.create-release.outputs.upload_url }}
-          asset_path: release_files/Image
-          asset_name: Image
-          asset_content_type: application/octet-stream    
+          asset_content_type: application/zip
