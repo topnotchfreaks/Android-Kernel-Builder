@@ -689,6 +689,17 @@ jobs:
         with:
           tag_name: ${{ env.kernelBranch }}_${{ env.BUILD_TIME }}
           release_name: Release ${{ env.kernelBranch }} - ${{ env.BUILD_TIME }}
+          body: |
+            🔥 **Build Notes**:
+            - Compiled with ${{ github.event.inputs.clangCompiler }}
+            - Localversion: ${{ github.event.inputs.localVersion }}
+            - KernelSU: ${{ github.event.inputs.kernelSUChoice }}
+            - SUSFS: ${{ github.event.inputs.withKernelSUSFS }}
+            - Branch: ${{ github.event.inputs.susfsBranch }}
+        
+            📦 **Flash Instructions**:
+            - Use latest recovery
+            - Flash via Orangefox or TWRP
           draft: false
           prerelease: false
           generate_release_notes: true
