@@ -702,5 +702,5 @@ jobs:
         with:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
           asset_path: ./${{ env.kernelDir }}/${{ env.kernelName }}/${{ env.ZIP_NAME }}
-          asset_name: ${{ env.ZIP_NAME }}
+          asset_name: Anykernel3_${{ env.ZIP_NAME }}
           asset_content_type: application/
