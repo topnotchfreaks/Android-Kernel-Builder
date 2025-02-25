@@ -705,3 +705,33 @@ jobs:
           asset_path: ./${{ env.kernelDir }}/${{ env.kernelName }}/${{ env.kernelBranch }}_${{ env.BUILD_TIME }}.zip
           asset_name: Anykernel3_${{ env.kernelBranch }}_${{ env.BUILD_TIME }}.zip
           asset_content_type: application/zip
+
+      - name: "🧹 Cleanup workspace"
+        run: |
+          echo "Cleaning up workspace..."
+          
+          # Remove kernel source directory
+          if [ -d "${{ env.kernelDir }}" ]; then
+            echo "Removing kernel source directory..."
+            rm -rf "${{ env.kernelDir }}"
+          fi
+      
+          # Remove Clang toolchain
+          if [ -d "clang" ]; then
+            echo "Removing Clang toolchain..."
+            rm -rf clang
+          fi
+      
+          # Remove AnyKernel3 directory
+          if [ -d "${{ env.kernelDir }}/${{ env.kernelName }}/AnyKernel3" ]; then
+            echo "Removing AnyKernel3 directory..."
+            rm -rf "${{ env.kernelDir }}/${{ env.kernelName }}/AnyKernel3"
+          fi
+      
+          # Remove temporary files
+          echo "Removing temporary files..."
+          find . -name "*.o" -delete
+          find . -name "*.tmp" -delete
+          find . -name "*.cmd" -delete
+      
+          echo "✅ Workspace cleanup complete!"
