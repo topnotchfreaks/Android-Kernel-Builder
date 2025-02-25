@@ -735,15 +735,32 @@ jobs:
           prerelease: false
           generate_release_notes: true
       
-      - name: "⬆ Upload AnyKernel3, boot.img, and Image to GitHub Release"
+      - name: "⬆️ Upload AnyKernel3 to GitHub Release"
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         with:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
-          asset_path: release_files/${{ matrix.file }}
-          asset_name: ${{ matrix.file }}
+          asset_path: ./${{ env.kernelDir }}/${{ env.kernelName }}/${{ env.kernelBranch }}_${{ env.BUILD_TIME }}.zip
+          asset_name: Anykernel3_${{ env.kernelBranch }}_${{ env.BUILD_TIME }}.zip
+          asset_content_type: application/zip 
+
+      - name: "⬆ Upload boot.img to GitHub Release"
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        with:
+          upload_url: ${{ steps.create-release.outputs.upload_url }}
+          asset_path: release_files/boot.img
+          asset_name: boot.img
           asset_content_type: application/octet-stream
-        strategy:
-          matrix:
-            file: [ "Anykernel3_${{ env.ZIP_NAME }}", "boot.img", "Image" ]
+
+      - name: "⬆ Upload Image to GitHub Release"
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        with:
+          upload_url: ${{ steps.create-release.outputs.upload_url }}
+          asset_path: release_files/Image
+          asset_name: Image
+          asset_content_type: application/octet-stream    
