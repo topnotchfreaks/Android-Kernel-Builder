@@ -197,34 +197,52 @@ jobs:
 
       - name: "💫 Get Toolchains"
         run: |
-          # Determine the Clang URL based on the selected compiler
+          set -e  # Exit on errors
+      
+          # Function to fetch latest release tar.gz URL from GitHub
+          get_latest_github_release() {
+            local repo_url="$1"
+            echo "Fetching latest release from $repo_url..."
+            latest_url=$(curl -sL "https://api.github.com/repos/$repo_url/releases/latest" | grep "browser_download_url.*tar.gz" | cut -d '"' -f 4 | head -n 1)
+            
+            if [[ -z "$latest_url" ]]; then
+              echo "❌ Failed to fetch latest release from $repo_url!"
+              exit 1
+            fi
+      
+            echo "$latest_url"
+          }
+      
+          # Determine the Clang URL dynamically
           case "${{ github.event.inputs.clangCompiler }}" in
             "ZyC Clang")
-              clang_url="https://github.com/ZyCromerZ/Clang/releases/download/21.0.0git-20250221-release/Clang-21.0.0git-20250221.tar.gz"
+              clang_url=$(get_latest_github_release "ZyCromerZ/Clang")
               ;;
             "Greenforce Clang")
-              clang_url="https://github.com/greenforce-project/greenforce_clang/releases/download/23022025/greenforce-clang-21.0.0git-23022025.tar.gz"
+              clang_url=$(get_latest_github_release "greenforce-project/greenforce_clang")
               ;;
             "SuperRyzen Clang")
               clang_url="https://gitlab.com/TianWalkzzMiku/SuperRyzen-Clang/"
               ;;
             "WeebX Clang")
-              clang_url="https://github.com/XSans0/WeebX-Clang/releases/download/WeebX-Clang-19.1.5-release/WeebX-Clang-19.1.5.tar.gz"
+              clang_url=$(get_latest_github_release "XSans0/WeebX-Clang")
               ;;
             *)
               echo "❌ Unsupported Clang compiler: ${{ github.event.inputs.clangCompiler }}"
               exit 1
               ;;
           esac
-  
+      
+          echo "✅ Clang URL: $clang_url"
+      
           # Create clang directory
           mkdir -p clang
-  
+      
           # Check if it's an archive or a Git repo
-          if [[ "$clang_url" == *.tar.gz || "$clang_url" == *.zip || "$clang_url" == *.tar.xz || "$clang_url" == *.tgz || "$clang_url" == *.rar ]]; then
-            echo "🚀 Downloading ${clang_url}..."
+          if [[ "$clang_url" == *.tar.gz ]]; then
+            echo "🚀 Downloading latest Clang from: $clang_url..."
             wget --progress=bar:force -O "clang/clang.tar.gz" "$clang_url" || { echo "❌ Failed to download Clang!"; exit 1; }
-  
+      
             # Extract Clang
             echo "📦 Extracting Clang..."
             tar -xf clang/clang.tar.gz -C clang || { echo "❌ Extraction failed!"; exit 1; }
@@ -233,7 +251,7 @@ jobs:
             echo "🚀 Cloning Clang from $clang_url..."
             git clone --recursive --depth=1 "$clang_url" clang || { echo "❌ Cloning failed!"; exit 1; }
           fi
-  
+      
           # Find Clang's bin directory
           if [ -d "clang/bin" ]; then
             CLANG_PATH="${{ github.workspace }}/clang/bin"
@@ -241,18 +259,18 @@ jobs:
             CLANG_PATH=$(find clang -type d -name "bin" | head -n 1)
             CLANG_PATH="${{ github.workspace }}/${CLANG_PATH}"
           fi
-  
+      
           # Ensure Clang binary exists
           if [ ! -f "$CLANG_PATH/clang" ]; then
             echo "❌ Clang binary not found in $CLANG_PATH! Build might fail."
             ls -R clang  # Debugging: Show extracted files
             exit 1
           fi
-    
+      
           echo "✅ Using Clang from $CLANG_PATH"
           echo "CLANG_PATH=$CLANG_PATH" >> $GITHUB_ENV
           echo "$CLANG_PATH" >> $GITHUB_PATH  # Ensures path is updated
-    
+      
           export PATH="$CLANG_PATH:$PATH"
           export CLANG_TRIPLE="aarch64-linux-gnu-"
           export CC="clang"
@@ -262,10 +280,10 @@ jobs:
           export OBJCOPY="llvm-objcopy"
           export OBJDUMP="llvm-objdump"
           export STRIP="llvm-strip"
-    
+      
           echo "⚙️ Using Clang version:"
-          clang --version || echo "❌ Clang not found in PATH!" 
-    
+          clang --version || echo "❌ Clang not found in PATH!"
+        
       - name: 📐 Set swap to 50G
         uses: pierotofy/set-swap-space@master
         with:
