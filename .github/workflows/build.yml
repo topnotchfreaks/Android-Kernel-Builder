@@ -708,13 +708,13 @@ jobs:
           release_name: Release ${{ env.kernelBranch }} - ${{ env.BUILD_TIME }}
           body: |
             - **Build Notes**
+            - Repository Branch: `${{ github.ref_name }}`
             - Compiled with ${{ github.event.inputs.clangCompiler }}
-            - Localversion: ${{ github.event.inputs.localVersion }}
             - KernelSU: ${{ github.event.inputs.kernelSUChoice }}
             - SUSFS: ${{ github.event.inputs.withKernelSUSFS }}
             - Branch: ${{ github.event.inputs.susfsBranch }}
         
-            📦 **Flash Instructions**:
+            - **Flash Instructions**
             - Use latest recovery
             - Flash via Orangefox or TWRP
           draft: false
