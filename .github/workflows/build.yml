@@ -295,10 +295,15 @@ jobs:
 
       - name: "⚡ Configure ccache"
         run: |
-            echo "CCACHE_DIR=${{ github.workspace }}/.ccache" >> $GITHUB_ENV
-            echo "CC='ccache clang'" >> $GITHUB_ENV
-            echo "CXX='ccache clang++'" >> $GITHUB_ENV
-            echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
+          echo "CCACHE_DIR=${{ github.workspace }}/.ccache" >> $GITHUB_ENV
+          echo "CCACHE_COMPRESS=0" >> $GITHUB_ENV  # Disable compression for faster performance
+          echo "CCACHE_MAXSIZE=10G" >> $GITHUB_ENV  # Adjust based on available disk space
+          echo "CCACHE_CPP2=no" >> $GITHUB_ENV  # Disable CPP2 unless needed
+          echo "CC='ccache clang'" >> $GITHUB_ENV
+          echo "CXX='ccache clang++'" >> $GITHUB_ENV
+      
+          # Create CCache directory if it doesn't exist
+          mkdir -p "${{ github.workspace }}/.ccache"
           
       - name: "😎 Set args for GKI"
         id: generate-args
@@ -608,34 +613,26 @@ jobs:
 
       - name: "🎶 Build kernel"
         working-directory: ./${{ env.kernelDir }}/${{ env.kernelName }}
-        env:
-          args: ${{ steps.generate-args.outputs.args }}
         run: |
-          export KBUILD_BUILD_USER="Action"
-          export KBUILD_BUILD_HOST="GitHub"
-        
-          # Enable CCache
           export CCACHE_DIR="${{ github.workspace }}/.ccache"
-          export CCACHE_COMPRESS=1
-          export CCACHE_COMPRESSLEVEL=6
+          export CCACHE_COMPRESS=0
           export CCACHE_MAXSIZE=10G
-          export CCACHE_CPP2=yes
-          ccache -z  # Reset stats
-        
-          # Build Kernel
+          export CCACHE_CPP2=no
+
+          echo "Build arguments: ${args}"
           make ${args} \
             LLVM=1 \
             LTO=thin \
-            CC=clang \
-            AR=llvm-ar \
-            AS=llvm-as \
-            NM=llvm-nm \
-            OBJCOPY=llvm-objcopy \
-            OBJDUMP=llvm-objdump \
-            STRIP=llvm-strip \
-            KBUILD_BUILD_USER="$KBUILD_BUILD_USER" \
-            KBUILD_BUILD_HOST="$KBUILD_BUILD_HOST" \
+            CC="ccache clang" \
+            AR="llvm-ar" \
+            AS="llvm-as" \
+            NM="llvm-nm" \
+            OBJCOPY="llvm-objcopy" \
+            OBJDUMP="llvm-objdump" \
+            STRIP="llvm-strip" \
             -j$(nproc --all)
+
+          ccache -s  # Display CCache statistics
         
       - name: "📤 Save ccache Cache"
         uses: actions/cache@v4
