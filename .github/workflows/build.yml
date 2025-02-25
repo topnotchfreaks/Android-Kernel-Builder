@@ -648,7 +648,7 @@ jobs:
         run: |
           # Clone AnyKernel3
           git clone https://github.com/topnotchfreaks/AnyKernel3.git --depth=1
-      
+
           # Verify the kernel image path
           KERNEL_IMAGE_PATH="../${{ env.OUT_DIR }}/arch/${{ env.ARCH }}/boot/Image"
           if [ ! -f "$KERNEL_IMAGE_PATH" ]; then
@@ -662,19 +662,19 @@ jobs:
               echo "Found kernel image at: $KERNEL_IMAGE_PATH"
             fi
           fi
-      
+
           # Copy the kernel image to AnyKernel3
           cp "$KERNEL_IMAGE_PATH" AnyKernel3/Image
-      
+
           # Pack the kernel
           ZIP_NAME="${{ env.kernelBranch }}_${{ env.BUILD_TIME }}.zip"
           cd AnyKernel3
           zip -r9 "../$ZIP_NAME" * -x .git/*
           cd ..
-      
+
           # Set the ZIP file path as an environment variable for the next step
           echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
-      
+
       - name: "⬆️ Upload Kernel Artifact"
         uses: actions/upload-artifact@v4
         with:
@@ -682,3 +682,25 @@ jobs:
           path: ./${{ env.kernelDir }}/${{ env.kernelName }}/${{ env.ZIP_NAME }}
           if-no-files-found: ignore
           retention-days: 7
+
+      - name: "🚀 Create GitHub Release"
+        id: create-release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.kernelBranch }}_${{ env.BUILD_TIME }}
+          release_name: Release ${{ env.kernelBranch }} - ${{ env.BUILD_TIME }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+
+      - name: "⬆️ Upload AnyKernel3 to GitHub Release"
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create-release.outputs.upload_url }}
+          asset_path: ./${{ env.kernelDir }}/${{ env.kernelName }}/${{ env.ZIP_NAME }}
+          asset_name: ${{ env.ZIP_NAME }}
+          asset_content_type: application/
