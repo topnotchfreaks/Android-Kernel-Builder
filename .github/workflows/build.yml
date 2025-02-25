@@ -202,7 +202,6 @@ jobs:
           # Function to fetch latest release tar.gz URL from GitHub
           get_latest_github_release() {
             local repo_url="$1"
-            echo "Fetching latest release from $repo_url..."
             latest_url=$(curl -sL "https://api.github.com/repos/$repo_url/releases/latest" | grep "browser_download_url.*tar.gz" | cut -d '"' -f 4 | head -n 1)
             
             if [[ -z "$latest_url" ]]; then
@@ -210,7 +209,7 @@ jobs:
               exit 1
             fi
       
-            echo "$latest_url"
+            printf "%s" "$latest_url"  # Use printf to output only the URL
           }
       
           # Determine the Clang URL dynamically
@@ -222,7 +221,7 @@ jobs:
               clang_url=$(get_latest_github_release "greenforce-project/greenforce_clang")
               ;;
             "SuperRyzen Clang")
-              clang_url="https://gitlab.com/TianWalkzzMiku/SuperRyzen-Clang/"
+              clang_url="https://gitlab.com/TianWalkzzMiku/SuperRyzen-Clang/"  # GitLab does not support direct API fetch in the same way
               ;;
             "WeebX Clang")
               clang_url=$(get_latest_github_release "XSans0/WeebX-Clang")
@@ -282,7 +281,7 @@ jobs:
           export STRIP="llvm-strip"
       
           echo "⚙️ Using Clang version:"
-          clang --version || echo "❌ Clang not found in PATH!"
+          clang --version || echo "❌ Clang not found in PATH!"        
         
       - name: 📐 Set swap to 50G
         uses: pierotofy/set-swap-space@master
