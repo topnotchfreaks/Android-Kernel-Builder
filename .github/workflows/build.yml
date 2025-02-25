@@ -681,6 +681,14 @@ jobs:
       
           echo "Found kernel image at: $KERNEL_IMAGE_PATH"
           cp "$KERNEL_IMAGE_PATH" AnyKernel3/Image
+
+          # Check if boot.img exists
+          BOOT_IMAGE_PATH="../${{ env.OUT_DIR }}/arch/${{ env.ARCH }}/boot/boot.img"
+          if [ ! -f "$BOOT_IMAGE_PATH" ]; then
+            echo "Error: No boot.img found."
+            exit 1
+          fi
+          echo "Found boot image at: $BOOT_IMAGE_PATH"
       
           # Pack the kernel
           ZIP_NAME="${{ env.kernelBranch }}_${{ env.BUILD_TIME }}.zip"
