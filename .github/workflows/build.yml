@@ -452,15 +452,6 @@ jobs:
           fi
 
           cat ./arch/${{ env.ARCH }}/configs/${{ env.DEFCONFIG_NAME }}
-
-      - name: "🔍 KernelSU check"
-        working-directory: ./${{ env.kernelDir }}/${{ env.kernelName }}
-        run: |
-          if [ "${{ github.event.inputs.kernelSUChoice }}" == "None" ]; then
-            echo "Non-KSU Build"
-          else
-            echo "KSU Build"
-          fi
   
       - name: "👍 Make defconfig"
         working-directory: ./${{ env.kernelDir }}/${{ env.kernelName }}
@@ -651,14 +642,6 @@ jobs:
         with:
           path: ${{ github.workspace }}/.ccache
           key: ${{ runner.os }}-ccache-${{ github.sha }}
-        
-      - name: "💛 Upload Image"
-        uses: actions/upload-artifact@v4
-        with:
-          name: "${{ env.kernelDevice }}_${{ env.kernelName }}_${{ env.kernelBranch }}_${{ env.BUILD_TIME }}"
-          path: ./${{ env.kernelDir }}/${{ env.OUT_DIR }}/arch/${{ env.ARCH }}/boot/Image
-          if-no-files-found: ignore
-          retention-days: 7
 
       - name: "📦 Pack Anykernel3"
         working-directory: ./${{ env.kernelDir }}/${{ env.kernelName }}
@@ -689,14 +672,6 @@ jobs:
           cd ..
 
           echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
-      
-      - name: "⬆️ Upload Kernel Artifact"
-        uses: actions/upload-artifact@v4
-        with:
-          name: Anykernel3_${{ env.kernelBranch }}_${{ env.BUILD_TIME }}.zip
-          path: ./${{ env.kernelDir }}/${{ env.kernelName }}/${{ env.kernelBranch }}_${{ env.BUILD_TIME }}.zip
-          if-no-files-found: ignore
-          retention-days: 7
       
       - name: "🚀 Create GitHub Release"
         id: create-release
