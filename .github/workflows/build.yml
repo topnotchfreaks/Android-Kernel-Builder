@@ -688,6 +688,12 @@ jobs:
           zip -r9 "../$ZIP_NAME" * -x .git/*
           cd ..
       
+          # Move necessary files for upload
+          mkdir -p release_files
+          cp "$KERNEL_IMAGE_PATH" release_files/Image
+          cp "$BOOT_IMAGE_PATH" release_files/boot.img
+          mv "$ZIP_NAME" release_files/
+
           echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
       
       - name: "⬆️ Upload Kernel Artifact"
@@ -721,12 +727,15 @@ jobs:
           prerelease: false
           generate_release_notes: true
       
-      - name: "⬆️ Upload AnyKernel3 to GitHub Release"
+      - name: "⬆ Upload AnyKernel3, boot.img, and Image to GitHub Release"
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         with:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
-          asset_path: ./${{ env.kernelDir }}/${{ env.kernelName }}/${{ env.kernelBranch }}_${{ env.BUILD_TIME }}.zip
-          asset_name: Anykernel3_${{ env.kernelBranch }}_${{ env.BUILD_TIME }}.zip
-          asset_content_type: application/zip        
+          asset_path: release_files/${{ matrix.file }}
+          asset_name: ${{ matrix.file }}
+          asset_content_type: application/octet-stream
+        strategy:
+          matrix:
+            file: [ "Anykernel3_${{ env.ZIP_NAME }}", "boot.img", "Image" ]
