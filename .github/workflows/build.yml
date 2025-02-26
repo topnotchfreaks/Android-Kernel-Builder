@@ -10,14 +10,14 @@ on:
         description: "Custom kernel source URL"
         required: true
         type: string
-        default: "https://github.com/KDEFFALT/kernel_msm-5.15" # Default kernel source URL
+        default: "https://github.com/KDEFFALT/kernel_msm-5.15"
       kernelPrivateSource:
-        description: "is private source?"
+        description: "Is private source?"
         required: false
         type: boolean
         default: false
       kernelBranch:
-        description: "kernel branch (default if empty)"
+        description: "Kernel branch (default if empty)"
         required: false
         type: string
         default: "main"
@@ -25,17 +25,17 @@ on:
         description: "Device (used for defconfig)"
         required: true
         type: string
-        default: "gki"  # Default device codename
+        default: "gki"
       kernelSourceName:
         description: "Kernel source name"
         required: true
         type: string
-        default: "kernel_msm-5.15"  # Default kernel source name
+        default: "kernel_msm-5.15"
       localVersion:
         description: "Custom localversion name (e.g., -mybuild)"
         required: false
         type: string
-        default: ""  # Default is empty (no suffix)
+        default: ""
       kernelSUChoice:
         description: "Choose KernelSU version"
         required: true
@@ -56,7 +56,7 @@ on:
         description: "SUSFS branch to use"
         required: false
         type: string
-        default: "gki-android13-5.15"  # Default SUSFS branch
+        default: "gki-android13-5.15"
       clangCompiler:
         description: "Clang compiler to use"
         required: false
